@@ -233,37 +233,7 @@ export async function handleRegister(request: Request, env: Env): Promise<Respon
     return jsonResponse({ success: true, role: user.role }, 200);
   }
 
-  if (!inviteCode) {
-    return errorResponse('Invite code is required', 403);
-  }
-
-  try {
-    await storage.createUser(user);
-  } catch (error) {
-    const msg = error instanceof Error ? error.message.toLowerCase() : String(error).toLowerCase();
-    if (msg.includes('unique') || msg.includes('constraint')) {
-      return errorResponse('Email already registered', 409);
-    }
-    throw error;
-  }
-
-  const inviteMarked = await storage.markInviteUsed(inviteCode, user.id);
-  if (!inviteMarked) {
-    await storage.deleteUserById(user.id);
-    return errorResponse('Invite code is invalid or expired', 403);
-  }
-
-  await storage.createAuditLog({
-    id: generateUUID(),
-    actorUserId: user.id,
-    action: 'user.register.invite',
-    targetType: 'user',
-    targetId: user.id,
-    metadata: JSON.stringify({ email: user.email, inviteCode }),
-    createdAt: now,
-  });
-
-  return jsonResponse({ success: true, role: user.role }, 200);
+  return errorResponse('Registration is disabled', 403);
 }
 
 // POST /api/accounts/password-hint
