@@ -247,11 +247,6 @@ export default function AuthViews(props: AuthViewsProps) {
             <LogIn size={16} className="btn-icon" />
             {loginBusy ? t('txt_logging_in') : t('txt_log_in')}
           </button>
-          <div className="or">{t('txt_or')}</div>
-          <button type="button" className="btn btn-secondary full" onClick={props.onGotoRegister} disabled={loginBusy}>
-            <UserPlus size={16} className="btn-icon" />
-            {t('txt_create_account')}
-          </button>
         </form>
       </StandalonePageFrame>
     </div>
