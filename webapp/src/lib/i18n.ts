@@ -1611,7 +1611,9 @@ function resolveInitialLocale(): Locale {
   if (typeof navigator !== 'undefined') {
     const langs = Array.isArray(navigator.languages) ? navigator.languages : [navigator.language];
     for (const lang of langs) {
-      if (String(lang || '').toLowerCase().startsWith('zh')) return 'zh-CN';
+      const normalized = String(lang || '').toLowerCase();
+      if (normalized.startsWith('en')) return 'en';
+      if (normalized.startsWith('zh')) return 'zh-CN';
     }
   }
   return 'en';
