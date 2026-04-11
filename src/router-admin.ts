@@ -9,6 +9,7 @@ import {
   handleAdminDeleteUser,
 } from './handlers/admin';
 import { handleAdminBackupRoute } from './router-admin-backup';
+import { errorResponse } from './utils/response';
 
 export async function handleAdminRoute(
   request: Request,
@@ -25,16 +26,12 @@ export async function handleAdminRoute(
   if (adminBackupResponse) return adminBackupResponse;
 
   if (path === '/api/admin/invites') {
-    if (method === 'GET') return handleAdminListInvites(request, env, actorUser);
-    if (method === 'POST') return handleAdminCreateInvite(request, env, actorUser);
-    if (method === 'DELETE') return handleAdminDeleteAllInvites(request, env, actorUser);
-    return null;
+    return errorResponse('Invites are disabled', 403);
   }
 
   const adminInviteMatch = path.match(/^\/api\/admin\/invites\/([^/]+)$/i);
-  if (adminInviteMatch && method === 'DELETE') {
-    const inviteCode = decodeURIComponent(adminInviteMatch[1]);
-    return handleAdminRevokeInvite(request, env, actorUser, inviteCode);
+  if (adminInviteMatch) {
+    return errorResponse('Invites are disabled', 403);
   }
 
   const adminUserStatusMatch = path.match(/^\/api\/admin\/users\/([a-f0-9-]+)\/status$/i);
