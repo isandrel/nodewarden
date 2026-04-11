@@ -1,0 +1,79 @@
+name: Deploy Cloudflare Worker
+
+on:
+  push:
+    branches:
+      - main
+
+concurrency:
+  group: deploy-cloudflare-worker-main
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: cloudflare-worker
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Build app
+        run: bun run build
+
+      - name: Render deploy config from secrets
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_D1_DATABASE_ID: ${{ secrets.CLOUDFLARE_D1_DATABASE_ID }}
+          CLOUDFLARE_R2_BUCKET: ${{ secrets.CLOUDFLARE_R2_BUCKET }}
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import os
+
+          source = Path('wrangler.toml').read_text()
+          rendered = source.replace(
+              'database_name = "nodewarden-db"',
+              'database_name = "nodewarden-db"\ndatabase_id = "' + os.environ['CLOUDFLARE_D1_DATABASE_ID'] + '"',
+              1,
+          )
+          rendered = rendered.replace(
+              'bucket_name = "nodewarden-attachments"',
+              'bucket_name = "' + os.environ['CLOUDFLARE_R2_BUCKET'] + '"',
+              1,
+          )
+          rendered = rendered.replace(
+              'compatibility_date = "2024-01-01"',
+              'compatibility_date = "2024-01-01"\naccount_id = "' + os.environ['CLOUDFLARE_ACCOUNT_ID'] + '"',
+              1,
+          )
+          Path('wrangler.ci.toml').write_text(rendered)
+          PY
+
+      - name: Deploy to Cloudflare Workers
+        env:
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: deploy -c wrangler.ci.toml
+          packageManager: bun
+          secrets: |
+            JWT_SECRET
+
+      - name: Publish deployment summary
+        env:
+          CLOUDFLARE_WORKER_DOMAIN: ${{ secrets.CLOUDFLARE_WORKER_DOMAIN }}
+        run: |
+          if [ -n "$CLOUDFLARE_WORKER_DOMAIN" ]; then
+            printf '### Cloudflare Worker deployment\n' >> "$GITHUB_STEP_SUMMARY"
+            printf '%s\n' "- URL: https://${CLOUDFLARE_WORKER_DOMAIN}" >> "$GITHUB_STEP_SUMMARY"
+          fi
