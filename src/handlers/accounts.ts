@@ -248,7 +248,7 @@ function keysResponse(user: User): Record<string, unknown> {
 
 // POST /api/accounts/register
 // - First user becomes admin.
-// - Any subsequent user must provide a valid inviteCode.
+// - This deployment permanently rejects every subsequent registration.
 export async function handleRegister(request: Request, env: Env): Promise<Response> {
   const storage = new StorageService(env.DB);
 
@@ -289,7 +289,6 @@ export async function handleRegister(request: Request, env: Env): Promise<Respon
   const key = body.key;
   const privateKey = body.keys?.encryptedPrivateKey;
   const publicKey = body.keys?.publicKey;
-  const inviteCode = (body.inviteCode || '').trim();
   const masterPasswordHint = normalizeMasterPasswordHint(body.masterPasswordHint);
 
   if (!email || !masterPasswordHash || !key) {
@@ -370,48 +369,7 @@ export async function handleRegister(request: Request, env: Env): Promise<Respon
     return jsonResponse({ success: true, role: user.role }, 200);
   }
 
-  if (!inviteCode) {
-    return errorResponse('Invite code is required', 403);
-  }
-
-  const inviteMarked = await storage.markInviteUsed(inviteCode, user.id);
-  if (!inviteMarked) {
-    return errorResponse('Invite code is invalid or expired', 403);
-  }
-
-  try {
-    await storage.createUser(user);
-  } catch (error) {
-    await storage.revertInviteUsed(inviteCode, user.id);
-    const msg = error instanceof Error ? error.message.toLowerCase() : String(error).toLowerCase();
-    if (msg.includes('unique') || msg.includes('constraint')) {
-      return errorResponse('Email already registered', 409);
-    }
-    console.error('Registration failed after invite reservation:', error);
-    throw error;
-  }
-
-  try {
-    const assigned = await storage.assignInviteUsedBy(inviteCode, user.id);
-    if (!assigned) {
-      console.warn('Invite used_by was not assigned after registration', { inviteCode, userId: user.id });
-    }
-  } catch (error) {
-    // The invite is already consumed. Do not reactivate it after the user row exists.
-    console.error('Invite used_by assignment failed after registration:', error);
-  }
-
-  await writeAuditEvent(storage, {
-    actorUserId: user.id,
-    action: 'user.register.invite',
-    targetType: 'user',
-    targetId: user.id,
-    category: 'security',
-    level: 'info',
-    metadata: { email: user.email, inviteCode, ...auditRequestMetadata(request) },
-  });
-
-  return jsonResponse({ success: true, role: user.role }, 200);
+  return errorResponse('Registration is disabled', 403);
 }
 
 // POST /api/accounts/password-hint
