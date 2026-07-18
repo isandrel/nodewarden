@@ -5,6 +5,7 @@ node_modules/
 .wrangler/
 .dev.vars
 wrangler.my.toml
+wrangler.ci.toml
 RELEASE_NOTES.md
 tests/selfcheck.ts
 problem.md
