@@ -43,29 +43,37 @@ function isLocale(value: unknown): value is Locale {
   return AVAILABLE_LOCALES.some((item) => item.value === value);
 }
 
+export function resolveLocalePreference(saved: unknown, languages: readonly unknown[]): Locale {
+  if (isLocale(saved)) return saved;
+
+  for (const language of languages) {
+    const normalized = String(language || '').toLowerCase();
+    if (normalized.startsWith('en')) return 'en';
+    if (normalized === 'zh-tw' || normalized === 'zh-hk' || normalized === 'zh-mo' || normalized.includes('hant')) return 'zh-TW';
+    if (normalized.startsWith('zh')) return 'zh-CN';
+    if (normalized.startsWith('ru')) return 'ru';
+    if (normalized.startsWith('es')) return 'es';
+    if (normalized.startsWith('fi')) return 'fi';
+    if (normalized.startsWith('de')) return 'de';
+    if (normalized.startsWith('fr')) return 'fr';
+    if (normalized.startsWith('it')) return 'it';
+    if (normalized.startsWith('sv')) return 'sv';
+  }
+
+  return 'en';
+}
+
 function resolveInitialLocale(): Locale {
+  let saved: string | null = null;
   try {
-    const saved = localStorage.getItem(LOCALE_STORAGE_KEY);
-    if (isLocale(saved)) return saved;
+    saved = localStorage.getItem(LOCALE_STORAGE_KEY);
   } catch {
     // ignore storage errors
   }
-  if (typeof navigator !== 'undefined') {
-    const langs = Array.isArray(navigator.languages) ? navigator.languages : [navigator.language];
-    for (const lang of langs) {
-      const normalized = String(lang || '').toLowerCase();
-      if (normalized === 'zh-tw' || normalized === 'zh-hk' || normalized === 'zh-mo' || normalized.includes('hant')) return 'zh-TW';
-      if (normalized.startsWith('zh')) return 'zh-CN';
-      if (normalized.startsWith('ru')) return 'ru';
-      if (normalized.startsWith('es')) return 'es';
-      if (normalized.startsWith('fi')) return 'fi';
-      if (normalized.startsWith('de')) return 'de';
-      if (normalized.startsWith('fr')) return 'fr';
-      if (normalized.startsWith('it')) return 'it';
-      if (normalized.startsWith('sv')) return 'sv';
-    }
-  }
-  return 'en';
+  const languages = typeof navigator === 'undefined'
+    ? []
+    : (Array.isArray(navigator.languages) ? navigator.languages : [navigator.language]);
+  return resolveLocalePreference(saved, languages);
 }
 
 const localeLoaders: Record<Locale, () => Promise<{ default: MessageTable }>> = {
