@@ -1,0 +1,18 @@
+[urls]
+public_base_url = ""
+direct_origin_url = ""
+
+[pwa]
+service_worker_path = "/sw.js"
+app_shell_paths = ["/", "/index.html"]
+protocol_pages = []
+never_cache_prefixes = ["/api", "/auth", "/identity", "/config"]
+
+[cdn]
+enabled = true
+cache_status_headers = ["cf-cache-status", "age", "etag"]
+
+[browser]
+inspect_navigation_entries = true
+inspect_service_worker = true
+inspect_cache_storage = true
