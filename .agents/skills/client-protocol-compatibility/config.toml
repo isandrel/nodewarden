@@ -1,0 +1,18 @@
+[sources]
+canonical_repository = ""
+canonical_paths = []
+local_paths = []
+
+[clients]
+matrix = ["web", "desktop", "browser-extension", "mobile"]
+protocol_versions = []
+
+[security]
+validate_origins = true
+validate_redirects = true
+validate_message_sources = true
+reject_untrusted_callbacks = true
+
+[fixtures]
+directory = "tests/fixtures/protocol"
+allow_synthetic_only = true

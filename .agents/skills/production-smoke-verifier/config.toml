@@ -1,0 +1,21 @@
+[target]
+base_url = ""
+expected_service_name = ""
+health_paths = ["/", "/health"]
+asset_paths = []
+
+[http]
+allowed_methods = ["GET", "HEAD", "OPTIONS"]
+expected_status = [200]
+timeout_seconds = 15
+
+[platform]
+cli = ""
+read_only_commands = []
+
+[data]
+read_only_queries = []
+forbid_write_queries = true
+
+[confirmation]
+user_checks = ["sign in", "read existing data", "synchronize", "sign out"]

@@ -1,0 +1,30 @@
+[git]
+upstream_remote = "upstream"
+fork_remote = "origin"
+base_branch = "main"
+mirror_branch = "main"
+production_branch = "custom"
+tag_pattern = "v*"
+
+[behavior]
+fetch_by_default = false
+
+[[categories]]
+name = "database"
+patterns = ["migrations/**", "**/*schema*", "**/database/**"]
+
+[[categories]]
+name = "deployment"
+patterns = [".github/workflows/**", "**/wrangler*.toml", "**/Dockerfile*", "**/deploy/**"]
+
+[[categories]]
+name = "authentication"
+patterns = ["**/auth/**", "**/account*", "**/identity*", "**/session*"]
+
+[[categories]]
+name = "client-protocol"
+patterns = ["**/sync*", "**/connector*", "**/cors*", "**/protocol*"]
+
+[[categories]]
+name = "dependencies"
+patterns = ["**/package.json", "**/package-lock.json", "**/bun.lock", "**/pnpm-lock.yaml", "**/requirements*.txt"]
