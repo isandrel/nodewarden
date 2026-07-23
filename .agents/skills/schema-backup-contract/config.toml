@@ -1,0 +1,20 @@
+[schema]
+runtime_sources = []
+initial_sources = []
+migration_paths = ["migrations/**"]
+version_markers = []
+
+[backup]
+export_sources = []
+import_sources = []
+encrypted_setting_sources = []
+
+[policy]
+durable_record_patterns = []
+excluded_runtime_patterns = ["*lock*", "*cache*", "*session*", "*replay*", "*temporary*"]
+retired_sensitive_fields = []
+
+[commands]
+schema_checks = []
+backup_checks = []
+restore_checks = []

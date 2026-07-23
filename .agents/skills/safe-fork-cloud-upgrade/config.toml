@@ -1,0 +1,25 @@
+[git]
+upstream_remote = "upstream"
+fork_remote = "origin"
+mirror_branch = "main"
+production_branch = "custom"
+backup_branch_prefix = "backup/pre-upgrade-"
+backup_tag_prefix = "pre-upgrade-"
+
+[backup]
+cli = ""
+external_directory = ""
+export_commands = []
+metadata_commands = []
+verification_commands = []
+
+[deployment]
+trigger_branch = "custom"
+validation_commands = []
+smoke_checks = []
+
+[safety]
+forbid_resource_recreation = true
+forbid_secret_rotation = true
+require_exact_force_with_lease = true
+require_authenticated_confirmation = true

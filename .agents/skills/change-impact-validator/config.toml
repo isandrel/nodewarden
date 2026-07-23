@@ -1,0 +1,34 @@
+[[rules]]
+name = "database-contract"
+patterns = ["migrations/**", "**/*schema*", "**/storage/**"]
+companions = ["runtime schema", "initial schema or migrations", "schema version", "backup contract"]
+commands = []
+checks = ["Confirm backward-compatible initialization", "Confirm rollback and restore behavior"]
+
+[[rules]]
+name = "localization"
+patterns = ["**/i18n/**", "**/locales/**", "**/*locale*"]
+companions = ["locale registry", "all supported bundles", "translation validator"]
+commands = []
+checks = ["Confirm key parity", "Confirm fallback and language priority"]
+
+[[rules]]
+name = "authentication"
+patterns = ["**/auth/**", "**/account*", "**/identity*", "**/session*", "**/token*"]
+companions = ["authorization checks", "negative tests", "audit behavior"]
+commands = []
+checks = ["Test denied paths", "Verify secrets and tokens are not logged"]
+
+[[rules]]
+name = "deployment"
+patterns = [".github/workflows/**", "**/wrangler*.toml", "**/Dockerfile*", "**/deploy/**"]
+companions = ["resource bindings", "environment secrets", "rollback procedure"]
+commands = ["git diff --check"]
+checks = ["Confirm push triggers", "Confirm deployment target identity"]
+
+[[rules]]
+name = "documentation"
+patterns = ["**/*.md", "docs/**"]
+companions = []
+commands = ["git diff --check"]
+checks = ["Verify commands and paths against the repository"]
