@@ -4,6 +4,7 @@ import NetworkStatusBadge from '@/components/NetworkStatusBadge';
 import StandalonePageFrame from '@/components/StandalonePageFrame';
 import { t } from '@/lib/i18n';
 import { getCurrentNetworkStatus, subscribeNetworkStatus, type NetworkStatus } from '@/lib/network-status';
+import { shouldShowCreateAccount } from '@/lib/registration-policy';
 
 interface LoginValues {
   email: string;
@@ -357,11 +358,15 @@ export default function AuthViews(props: AuthViewsProps) {
             <KeyRound size={16} className="btn-icon" />
             {passkeyBusy ? t('txt_logging_in') : t('txt_login_with_passkey')}
           </button>
-          <div className="or">{t('txt_or')}</div>
-          <button type="button" className="btn btn-secondary full" onClick={props.onGotoRegister} disabled={loginBusy || passkeyBusy}>
-            <UserPlus size={16} className="btn-icon" />
-            {t('txt_create_account')}
-          </button>
+          {shouldShowCreateAccount(props.registrationInviteRequired) ? (
+            <>
+              <div className="or">{t('txt_or')}</div>
+              <button type="button" className="btn btn-secondary full" onClick={props.onGotoRegister} disabled={loginBusy || passkeyBusy}>
+                <UserPlus size={16} className="btn-icon" />
+                {t('txt_create_account')}
+              </button>
+            </>
+          ) : null}
             </>
           )}
         </form>
