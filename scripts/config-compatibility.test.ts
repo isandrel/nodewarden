@@ -8,5 +8,7 @@ test('config enables the official Bitwarden desktop settings dialog', () => {
 
   assert.equal(body.featureStates['desktop-ui-settings-dialog'], true);
   assert.equal(body.environment.vault, 'https://vault.example.test');
+  assert.equal(body.version, '2026.6.0');
+  assert.equal(body.settings.suppressOnboardingInterstitials, false);
   assert.equal(body.object, 'config');
 });
