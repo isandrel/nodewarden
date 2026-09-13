@@ -73,12 +73,25 @@ async function consumeWebSocketConnectionToken(request: Request, env: Env): Prom
 }
 
 async function authenticateNotificationsHub(request: Request, env: Env): Promise<JWTPayload | null> {
-  // Never accept an access JWT from the URL: URLs are routinely retained by logs,
-  // browser history, proxies, monitoring, and error tracking systems.
+  // An explicit header or ticket must never fall back to a different credential.
   if (request.headers.has('Authorization')) {
     return authenticateAccessToken(request, env);
   }
-  return consumeWebSocketConnectionToken(request, env);
+  const url = new URL(request.url);
+  if (url.searchParams.has('id')) {
+    if (url.searchParams.getAll('id').length !== 1) return null;
+    return consumeWebSocketConnectionToken(request, env);
+  }
+
+  // Official browser SignalR clients skip negotiation and cannot set a WebSocket
+  // Authorization header. This opt-in retains that contract, with the same JWT,
+  // account and device checks as bearer auth. Edge/proxy URL logging remains a
+  // risk even though credentials are removed before Durable Object forwarding.
+  if (env.ALLOW_LEGACY_NOTIFICATION_QUERY_TOKEN !== '1' || url.protocol !== 'https:') return null;
+  const queryTokens = url.searchParams.getAll('access_token');
+  if (queryTokens.length !== 1 || !queryTokens[0].trim()) return null;
+  const auth = new AuthService(env);
+  return auth.verifyAccessToken(`Bearer ${queryTokens[0].trim()}`);
 }
 
 export async function handleNotificationsNegotiate(request: Request, env: Env): Promise<Response> {
@@ -104,6 +117,9 @@ export async function handleNotificationsNegotiate(request: Request, env: Env): 
 }
 
 export async function handleNotificationsHub(request: Request, env: Env): Promise<Response> {
+  if (request.method !== 'GET' || new URL(request.url).pathname !== '/notifications/hub') {
+    return errorResponse('Not found', 404);
+  }
   if (request.headers.get('Upgrade')?.toLowerCase() !== 'websocket') {
     return errorResponse('Expected websocket', 426);
   }
@@ -114,11 +130,16 @@ export async function handleNotificationsHub(request: Request, env: Env): Promis
   const id = env.NOTIFICATIONS_HUB.idFromName(userId);
   const stub = env.NOTIFICATIONS_HUB.get(id);
   const forwardedUrl = new URL(request.url);
+  // Forward only verified routing claims. Never retain JWTs, consumed tickets,
+  // or caller-supplied nw_* identity parameters inside the Durable Object URL.
+  forwardedUrl.search = '';
   forwardedUrl.searchParams.set('nw_uid', userId);
   if (payload.did) {
     forwardedUrl.searchParams.set('nw_did', payload.did);
   }
-  return stub.fetch(new Request(forwardedUrl.toString(), request));
+  const headers = new Headers(request.headers);
+  headers.delete('Authorization');
+  return stub.fetch(new Request(forwardedUrl.toString(), { method: 'GET', headers }));
 }
 
 export async function handleAnonymousNotificationsHub(request: Request, env: Env): Promise<Response> {

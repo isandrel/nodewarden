@@ -8,6 +8,9 @@ export interface Env {
   };
   // Set to "1" to return 404 for the Web Vault while keeping client APIs available.
   HIDE_WEB_VAULT?: string;
+  // Explicit opt-in for official browser clients; incoming URLs can be logged by proxies.
+  // Keep unset unless that exposure has been accepted. Bundled web uses one-time tickets.
+  ALLOW_LEGACY_NOTIFICATION_QUERY_TOKEN?: string;
   // Prefer R2 when available. Optional to support KV-only deployments.
   ATTACHMENTS?: R2Bucket;
   // Optional fallback for attachment/send file storage (no credit card required).
