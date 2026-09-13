@@ -5,6 +5,7 @@ import preact from '@preact/preset-vite';
 import { defineConfig, type Plugin } from 'vite';
 
 const rootDir = fileURLToPath(new URL('.', import.meta.url));
+const PWA_CACHE_STRATEGY_VERSION = 'network-first-navigation-v2';
 
 function buildServiceWorkerSource(precacheUrls: string[], version: string): string {
   return `const CACHE_VERSION = ${JSON.stringify(`nodewarden-pwa-${version}`)};
@@ -90,16 +91,29 @@ async function warmStaticDependencies(response) {
 async function appShellNavigation(request) {
   const cache = await caches.open(APP_SHELL_CACHE);
   const url = new URL(request.url);
-  return (
-    (await cache.match(request, { ignoreSearch: true }))
-    || (await cache.match(url.pathname, { ignoreSearch: true }))
-    || (await cache.match('/'))
-    || (await cache.match('/index.html'))
-    || new Response(OFFLINE_FALLBACK_HTML, {
-      status: 200,
-      headers: { 'Content-Type': 'text/html; charset=UTF-8' },
-    })
-  );
+  try {
+    // Fetch first so a newly controlled browser does not see the offline
+    // fallback while the shell cache is still warming. The response is cached
+    // for the next offline navigation after it has been proven successful.
+    const response = await fetch(request);
+    if (isCacheableResponse(response)) {
+      await cache.put('/', response.clone());
+      await cache.put('/index.html', response.clone());
+      void warmStaticDependencies(response.clone());
+    }
+    return response;
+  } catch {
+    return (
+      (await cache.match(request, { ignoreSearch: true }))
+      || (await cache.match(url.pathname, { ignoreSearch: true }))
+      || (await cache.match('/'))
+      || (await cache.match('/index.html'))
+      || new Response(OFFLINE_FALLBACK_HTML, {
+        status: 200,
+        headers: { 'Content-Type': 'text/html; charset=UTF-8' },
+      })
+    );
+  }
 }
 
 async function connectorNavigation(request) {
@@ -191,7 +205,7 @@ self.addEventListener('fetch', (event) => {
 
 function buildCacheVersion(isDemo: boolean, urls: string[]): string {
   const digest = createHash('sha256')
-    .update(`${isDemo ? 'demo' : 'app'}\n${urls.join('\n')}`)
+    .update(`${isDemo ? 'demo' : 'app'}\n${PWA_CACHE_STRATEGY_VERSION}\n${urls.join('\n')}`)
     .digest('hex')
     .slice(0, 16);
   return `${isDemo ? 'demo' : 'app'}-${digest}`;

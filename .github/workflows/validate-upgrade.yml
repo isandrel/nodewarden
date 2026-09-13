@@ -35,6 +35,7 @@ jobs:
           bun run test:config-compatibility
           bun run test:generator-compatibility
           bun run test:web-crypto
+          bun run test:pwa
           bun run test:webauthn-connectors
       - name: Check Worker and web types
         run: |
