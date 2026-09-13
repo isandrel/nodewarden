@@ -27,11 +27,10 @@ After accepting the URL exposure risk, add this to the deployment configuration:
 ALLOW_LEGACY_NOTIFICATION_QUERY_TOKEN = "1"
 ```
 
-The current repository configuration deliberately leaves this unset. On this
-fork, production configuration is generated from `wrangler.toml`; enabling the
-option there requires a reviewed deployment. Pushing `custom` automatically
-deploys the Worker. Keep the setting out of the production branch until the
-operator has accepted the risk and the exact candidate has passed validation.
+The current promotion explicitly enables this setting in `wrangler.toml` after
+operator acceptance. On this fork, production configuration is generated from
+that file; pushing `custom` automatically deploys the Worker. Remove the setting
+or set it to `"0"` to disable it through a reviewed deployment.
 
 ## Authentication rules
 
@@ -75,9 +74,9 @@ The review validation workflow also runs the separate compatibility suites,
 both TypeScript projects, localization validation, dependency audit, and build.
 
 These checks do not establish authenticated compatibility with every installed
-desktop/mobile client. Before completing promotion, verify real client vault
-sync, notification delivery/reconnect, cipher edit/clear round-trips, and backup
-behavior. Keep the clean upstream mirror unchanged until those gates pass.
+desktop/mobile client. During promotion, verify real client vault sync,
+notification delivery/reconnect, cipher edit/clear round-trips, and backup
+behavior before mirroring the clean upstream branch.
 
 To disable compatibility, remove the option or set it to `"0"`, deploy through
 the same reviewed workflow, and verify that fresh query-token connections are

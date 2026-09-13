@@ -2,6 +2,11 @@ name = "nodewarden"
 main = "src/index.ts"
 compatibility_date = "2024-01-01"
 
+[vars]
+# Explicitly enabled for the current promotion to support official browser
+# SignalR clients. This exposes access tokens to URL logging infrastructure.
+ALLOW_LEGACY_NOTIFICATION_QUERY_TOKEN = "1"
+
 [build]
 command = "npm run build"
 
