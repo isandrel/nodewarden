@@ -32,6 +32,8 @@ jobs:
         run: bun run test
       - name: Run separate compatibility suites
         run: |
+          bun run test:password-verifier-migration
+          bun run test:vault-compatibility
           bun run test:config-compatibility
           bun run test:generator-compatibility
           bun run test:web-crypto

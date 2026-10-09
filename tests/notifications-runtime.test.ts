@@ -5,7 +5,7 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import test from 'node:test';
 import { build } from 'esbuild';
-import { Miniflare, Log, LogLevel } from 'miniflare';
+import { Miniflare, Log, LogLevel, convertV4MiniflareOptions } from 'miniflare';
 import { createJWT } from '../src/utils/jwt';
 
 const userId = '92ccde0c-9225-4ca8-a093-fb3ac66c136a';
@@ -45,7 +45,7 @@ test('notification and cipher contracts in the local Worker runtime', { timeout:
     external: ['cloudflare:workers'],
     logLevel: 'silent',
   });
-  const mf = new Miniflare({
+  const mf = new Miniflare(convertV4MiniflareOptions({
     modules: true,
     modulesRoot: directory,
     scriptPath: bundle,
@@ -58,7 +58,7 @@ test('notification and cipher contracts in the local Worker runtime', { timeout:
     },
     outboundService: () => new Response('External network disabled in this test', { status: 503 }),
     log: new Log(LogLevel.ERROR),
-  });
+  }));
   const sockets = new Set<{ close(): void }>();
   t.after(async () => {
     for (const socket of sockets) socket.close();

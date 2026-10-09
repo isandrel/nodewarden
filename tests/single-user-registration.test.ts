@@ -124,7 +124,7 @@ test('existing password verification remains valid', async () => {
   const env = createEnv(new FakeD1Database(1));
   const auth = new AuthService(env);
   const clientHash = 'existing-client-master-password-hash';
-  const storedHash = await auth.hashPasswordServer(clientHash, 'existing@example.com');
+  const storedHash = await auth.hashPasswordServer(clientHash);
 
   assert.equal(await auth.verifyPassword(clientHash, storedHash, 'existing@example.com'), true);
   assert.equal(await auth.verifyPassword('wrong-hash', storedHash, 'existing@example.com'), false);
