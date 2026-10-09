@@ -2,6 +2,7 @@ import { Env, JWTPayload, User } from '../types';
 import { verifyJWT, createJWT, createRefreshToken } from '../utils/jwt';
 import { getRefreshTokenSlidingTtlMs, LIMITS } from '../config/limits';
 import { StorageService } from './storage';
+import { verifyPasswordVerifier } from './password-verifier';
 
 // Server-side iterations for second-layer hashing.
 // The client already does heavy PBKDF2 (600k iterations).
@@ -157,13 +158,9 @@ export class AuthService {
     return SERVER_HASH_PREFIX + btoa(binary);
   }
 
-  // Verify password: new rows use server-side hashing; legacy rows store the raw client hash.
+  // The rollback build must read verifiers already migrated by newer servers.
   async verifyPassword(inputHash: string, storedHash: string, email: string): Promise<boolean> {
-    if (!storedHash.startsWith(SERVER_HASH_PREFIX)) {
-      return this.constantTimeEquals(inputHash, storedHash);
-    }
-    const serverHash = await this.hashPasswordServer(inputHash, email);
-    return this.constantTimeEquals(serverHash, storedHash);
+    return verifyPasswordVerifier(inputHash, storedHash, email);
   }
 
   private constantTimeEquals(a: string, b: string): boolean {
